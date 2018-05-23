@@ -461,6 +461,7 @@ player::player() : Character()
     power_level = 0;
     max_power_level = 0;
     stamina = get_stamina_max();
+    strain = 0;
     stim = 0;
     pkill = 0;
     radiation = 0;
@@ -1665,7 +1666,7 @@ int player::blood_loss( body_part bp ) const
 {
     int hp_cur_sum = 1;
     int hp_max_sum = 1;
-    
+
     if( bp == bp_leg_l || bp == bp_leg_r ) {
         hp_cur_sum = hp_cur[hp_leg_l] + hp_cur[hp_leg_r];
         hp_max_sum = hp_max[hp_leg_l] + hp_max[hp_leg_r];
@@ -1679,7 +1680,7 @@ int player::blood_loss( body_part bp ) const
         hp_cur_sum = hp_cur[hp_head];
         hp_max_sum = hp_max[hp_head];
     }
-    
+
     hp_cur_sum = std::min( hp_max_sum, std::max( 0, hp_cur_sum ) );
     return 100 - ( 100 * hp_cur_sum ) / hp_max_sum;
 }
@@ -3967,6 +3968,7 @@ void player::update_body( int from, int to )
         regen( five_mins );
         // Note: mend ticks once per 5 minutes, but wants rate in TURNS, not 5 minute intervals
         mend( five_mins * MINUTES( 5 ) );
+        reset_strain();
     }
 
     const int thirty_mins = ticks_between( from, to, MINUTES(30) );
@@ -4360,10 +4362,20 @@ void player::update_stamina( int turns )
         }
     }
 
+    int recovered = stamina;
     stamina = roll_remainder( stamina + stamina_recovery * turns );
 
     // Cap at max
     stamina = std::min( std::max( stamina, 0 ), max_stam );
+
+    // Increase strain by the amount of stamina gained back
+    recovered = stamina - recovered;
+    strain += recovered;
+}
+
+void player::reset_strain()
+{
+    strain = 0;
 }
 
 bool player::is_hibernating() const

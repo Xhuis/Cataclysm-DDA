@@ -235,6 +235,8 @@ class player : public Character
         void regen( int rate_multiplier );
         /** Regenerates stamina */
         void update_stamina( int turns );
+        /** Resets strain */
+        void reset_strain();
         /** Kills the player if too hungry, stimmed up etc., forces tired player to sleep and prints warnings. */
         void check_needs_extremes();
 
@@ -1357,6 +1359,7 @@ class player : public Character
         int tank_plut, reactor_plut, slow_rad;
         int oxygen;
         int stamina;
+        int strain; //this stat tracks how much stamina we've used up since we checked hunger, as the two are intertwined
         double recoil = MAX_RECOIL;
         int scent;
         int dodges_left, blocks_left;

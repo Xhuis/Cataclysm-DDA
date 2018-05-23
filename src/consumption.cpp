@@ -282,7 +282,26 @@ float player::metabolic_rate() const
     const float effective_hunger = get_hunger() * 100.0f / std::max( 50, get_speed() );
     const float modifier = multi_lerp( thresholds, effective_hunger );
 
-    return modifier * metabolic_rate_base();
+    //Physical activity determines hunger rate!
+    //By default, light activity (reading, crafting, resting) causes hunger to advance at half speed
+    //The "strain" variable keeps track of how hungry we should be
+    const int max_stamina = get_stamina_max();
+    float activity_mod = 0.5; //this is our base hunger mod; this is assuming we're currently resting and not doing any kind of activity
+    if (strain >= max_stamina * 0.10) { //we did at *least* a little bit of activity, so we get hungrier
+        activity_mod = 0.8f;
+    }
+    if (strain >= max_stamina * 0.25) {
+        activity_mod += 0.2f; //work means we're at full hunger
+    }
+    if (strain >= max_stamina * 0.5) {
+        activity_mod += 0.05f; //half a stamina bar; strenuous activity means that we're hungrier than normal
+    }
+    if (strain >= max_stamina) {
+        activity_mod += 0.1f; //full bar means we're worn out and hangry
+    }
+
+    add_msg_if_player( m_debug, "Strain: %i", strain );
+    return (modifier * metabolic_rate_base()) * activity_mod;
 }
 
 morale_type player::allergy_type( const item &food ) const
